@@ -1,6 +1,8 @@
 package com.pccw.assessment.database;
 
 import com.pccw.assessment.entity.User;
+import com.pccw.assessment.exception.ExceptionEnum;
+import com.pccw.assessment.exception.UserException;
 import org.springframework.stereotype.Repository;
 
 import java.util.HashMap;
@@ -23,12 +25,12 @@ public class FakeDatabase {
      * @param user {@link User} passed user info
      * @return true|false
      */
-    public boolean register(User user) {
+    public User register(User user) {
         if (activeUserMap.containsKey(user.getId())) {
-            return false;
+            throw new UserException(ExceptionEnum.EXIST);
         } else {
             activeUserMap.put(user.getId(), user);
-            return true;
+            return user;
         }
     }
 
@@ -38,12 +40,12 @@ public class FakeDatabase {
      * @param user {@link User} passed user info
      * @return true|false
      */
-    public boolean edit(User user) {
+    public User edit(User user) {
         if (activeUserMap.containsKey(user.getId())) {
             activeUserMap.put(user.getId(), user);
-            return true;
+            return user;
         } else {
-            return false;
+            throw new UserException(ExceptionEnum.NOT_FOUND);
         }
     }
 
@@ -68,9 +70,9 @@ public class FakeDatabase {
         if (isSoft) {
             User user = activeUserMap.get(id);
             if (user != null) {
-                user.setDeleted(true);
+                user.setIsDeleted(true);
             } else {
-                return null;
+                throw new UserException(ExceptionEnum.NOT_FOUND);
             }
             activeUserMap.remove(id);
             deletedUserMap.put(id, user);

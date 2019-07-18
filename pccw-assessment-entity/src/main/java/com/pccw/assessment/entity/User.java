@@ -2,11 +2,14 @@ package com.pccw.assessment.entity;
 
 import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 @Data
-@NoArgsConstructor
+@Setter
+@Getter
 public class User {
 
     private String id;
@@ -20,5 +23,6 @@ public class User {
 
     private String email;
 
-    private boolean isDeleted;
+    @JsonIgnore
+    private Boolean isDeleted;
 }

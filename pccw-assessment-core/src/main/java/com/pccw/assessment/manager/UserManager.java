@@ -41,9 +41,9 @@ public class UserManager {
      * Default register function
      *
      * @param user {@link User}
-     * @return boolean
+     * @return User
      */
-    public boolean register(User user) {
+    public User register(User user) {
         return register(user, true);
     }
 
@@ -51,10 +51,10 @@ public class UserManager {
      * Register user info and sending the notification message
      *
      * @param user   user
-     * @param isSync i
-     * @return
+     * @param isSync need asynchronous sending email or not
+     * @return User
      */
-    public boolean register(User user, boolean isSync) {
+    public User register(User user, boolean isSync) {
         Future future = service.submit(() -> sendNotification(user));
         if (isSync) {
             try {
@@ -90,9 +90,9 @@ public class UserManager {
      * Update the whole user info
      *
      * @param user {@link User}
-     * @return boolean
+     * @return User
      */
-    public boolean put(User user) {
+    public User put(User user) {
         return fakeDatabase.edit(user);
     }
 
@@ -100,14 +100,15 @@ public class UserManager {
      * Update partial user info
      *
      * @param user {@link User}
-     * @return boolean
+     * @return User
      */
-    public boolean patch(User user) {
+    public User patch(User user) {
         User exist = fakeDatabase.read(user.getId());
         Optional.ofNullable(user.getName()).ifPresent(exist::setName);
         Optional.ofNullable(user.getAge()).ifPresent(exist::setAge);
         Optional.ofNullable(user.getNation()).ifPresent(exist::setNation);
-        return fakeDatabase.edit(user);
+        Optional.ofNullable(user.getEmail()).ifPresent(exist::setEmail);
+        return fakeDatabase.edit(exist);
     }
 
     /**
