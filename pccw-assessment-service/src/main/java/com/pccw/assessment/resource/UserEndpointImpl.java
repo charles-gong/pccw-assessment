@@ -3,15 +3,26 @@ package com.pccw.assessment.resource;
 
 import com.pccw.assessment.entity.User;
 import com.pccw.assessment.manager.UserManager;
-import io.swagger.annotations.ApiOperation;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
-import java.util.UUID;
+
+import io.swagger.annotations.ApiOperation;
 
 @RestController
 @RequestMapping("/user")
@@ -37,13 +48,30 @@ public class UserEndpointImpl {
         }
     }
 
+    @ApiOperation(value = "Register user")
+    @PostMapping(value = "/async",
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {MediaType.APPLICATION_JSON_VALUE}
+    )
+    public ResponseEntity<String> registerAsync(@RequestBody @NotNull User user) {
+        user.setId(UUID.randomUUID().toString());
+        boolean success = userManager.register(user, false);
+        if (success) {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(String.format("Register for %s successfully.", user.getName()));
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(String.format("Register for %s unsuccessfully.", user.getName()));
+        }
+    }
+
     @ApiOperation(value = "Completely edit a user")
     @PutMapping(value = "",
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
     public ResponseEntity<String> put(@RequestBody @NotNull User user) {
-        if (user.getId() == null || user.getId().isBlank()) {
+        if (user.getId() == null || user.getId().trim().length() == 0) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Id is missing");
         }
 
@@ -63,7 +91,7 @@ public class UserEndpointImpl {
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
     public ResponseEntity<String> patch(@RequestBody @NotNull User user) {
-        if (user.getId() == null || user.getId().isBlank()) {
+        if (user.getId() == null || user.getId().trim().length() == 0) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body("Id is missing");
         }
 

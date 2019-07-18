@@ -14,7 +14,6 @@
     <version>${project.parent.version}</version>
     <packaging>jar</packaging>
 
-
     <dependencies>
         <dependency>
             <groupId>com.charles.assessment</groupId>
@@ -69,6 +68,24 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.spotify</groupId>
+                <artifactId>docker-maven-plugin</artifactId>
+                <version>1.0.0</version>
+                <configuration>
+                    <pushImage>false</pushImage>
+                    <imageName>gonglongmin/pccw:gonglongmin-pccw-assessment</imageName>
+                    <dockerDirectory>${basedir}/docker</dockerDirectory> <!-- 指定 Dockerfile 路径-->
+                    <!-- copy jar file to /root/ -->
+                    <resources>
+                        <resource>
+                            <targetPath>/</targetPath>
+                            <directory>${project.build.directory}</directory>
+                            <include>${project.build.finalName}.jar</include>
+                        </resource>
+                    </resources>
+                </configuration>
             </plugin>
         </plugins>
     </build>
