@@ -3,21 +3,16 @@ package com.pccw.assessment.database;
 import com.pccw.assessment.entity.User;
 import com.pccw.assessment.exception.ExceptionEnum;
 import com.pccw.assessment.exception.UserException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.HashMap;
-import java.util.Map;
 
 @Repository
 public class FakeDatabase {
 
-    /**
-     * Fake database map
-     * <p>
-     * store all the registered user information
-     */
-    private static final Map<String, User> activeUserMap = new HashMap<>();
-    private static final Map<String, User> deletedUserMap = new HashMap<>();
+
+    @Autowired
+    private RedisTemplate redisTemplate;
 
     /**
      * Register user
@@ -26,10 +21,11 @@ public class FakeDatabase {
      * @return true|false
      */
     public User register(User user) {
-        if (activeUserMap.containsKey(user.getId())) {
+        boolean exist = redisTemplate.hasKey(user.getId());
+        if (exist) {
             throw new UserException(ExceptionEnum.EXIST);
         } else {
-            activeUserMap.put(user.getId(), user);
+            redisTemplate.opsForValue().set(user.getId(), user);
             return user;
         }
     }
@@ -41,8 +37,9 @@ public class FakeDatabase {
      * @return true|false
      */
     public User edit(User user) {
-        if (activeUserMap.containsKey(user.getId())) {
-            activeUserMap.put(user.getId(), user);
+        boolean exist = redisTemplate.hasKey(user.getId());
+        if (exist) {
+            redisTemplate.opsForValue().set(user.getId(), user);
             return user;
         } else {
             throw new UserException(ExceptionEnum.NOT_FOUND);
@@ -56,7 +53,13 @@ public class FakeDatabase {
      * @return User info
      */
     public User read(String id) {
-        return activeUserMap.get(id);
+        boolean exist = redisTemplate.hasKey(id);
+        if (exist) {
+            User user = (User) redisTemplate.opsForValue().get(id);
+            return user;
+        } else {
+            throw new UserException(ExceptionEnum.NOT_FOUND);
+        }
     }
 
     /**
@@ -67,18 +70,17 @@ public class FakeDatabase {
      * @return User info
      */
     public User delete(String id, boolean isSoft) {
+        boolean exist = redisTemplate.hasKey(id);
+        if (!exist) {
+            throw new UserException(ExceptionEnum.NOT_FOUND);
+        }
+        User user = (User) redisTemplate.opsForValue().get(id);
         if (isSoft) {
-            User user = activeUserMap.get(id);
-            if (user != null) {
-                user.setIsDeleted(true);
-            } else {
-                throw new UserException(ExceptionEnum.NOT_FOUND);
-            }
-            activeUserMap.remove(id);
-            deletedUserMap.put(id, user);
+            user.setIsDeleted(true);
+            redisTemplate.opsForValue().set(id, user);
             return user;
         } else {
-            User user = activeUserMap.remove(id);
+            redisTemplate.delete(id);
             return user;
         }
     }

@@ -82,7 +82,7 @@ public class UserManager {
             log.error("UserManager :: register :: sending the notification service :: {}", e);
         }
         if (responseEntity.getStatusCodeValue() == 200) {
-            log.error("UserManager :: register :: sending the notification service :: {}", responseEntity.getBody());
+            log.info("UserManager :: register :: sending the notification service :: {}", responseEntity.getBody());
         }
     }
 
