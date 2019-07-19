@@ -1,12 +1,17 @@
 package com.pccw.assessment.handler;
 
-import com.pccw.assessment.entity.User;
 import com.pccw.assessment.exception.ExceptionEnum;
 import com.pccw.assessment.exception.UserException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
+import org.springframework.validation.ObjectError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import java.util.List;
 
 @ControllerAdvice
 @Slf4j
@@ -20,13 +25,26 @@ public class ExceptionGlobalHandler {
      */
     @ExceptionHandler(value = Exception.class)
     @ResponseBody
-    public ErrorInfo handler(Exception e) {
+    public ResponseEntity<ErrorInfo> handler(Exception e) {
         if (e instanceof UserException) {
             UserException userException = (UserException) e;
-            return toErrorInfo(userException);
+            if (((UserException) e).getCode() == -1) {
+                return ResponseEntity.status(500).body(toErrorInfo(userException));
+            } else {
+                return ResponseEntity.status(((UserException) e).getCode()).body(toErrorInfo(userException));
+            }
+        } else if (e instanceof MethodArgumentNotValidException) {
+            List<ObjectError> errors = ((MethodArgumentNotValidException) e).getBindingResult().getAllErrors();
+            if (!CollectionUtils.isEmpty(errors)) {
+                String message = errors.get(0).getDefaultMessage();
+                return ResponseEntity.status(400).body(toErrorInfo(new UserException(400, message)));
+            } else {
+                log.error("Oops, there is something unknown happens...{}", e);
+                return ResponseEntity.status(500).body(toErrorInfo(new UserException(ExceptionEnum.UNKONW_ERROR)));
+            }
         } else {
             log.error("Oops, there is something unknown happens...{}", e);
-            return toErrorInfo(new UserException(ExceptionEnum.UNKONW_ERROR));
+            return ResponseEntity.status(500).body(toErrorInfo(new UserException(ExceptionEnum.UNKONW_ERROR)));
         }
     }
 

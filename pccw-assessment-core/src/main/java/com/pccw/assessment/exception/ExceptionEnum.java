@@ -8,7 +8,7 @@ public enum ExceptionEnum {
 
     NOT_FOUND(404, "NOT_FOUND"),
 
-    EXIST(401, "EXIST");
+    EXIST(409, "EXIST");
 
     private Integer code;
     private String msg;

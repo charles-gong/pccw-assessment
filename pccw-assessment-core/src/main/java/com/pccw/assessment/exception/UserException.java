@@ -9,6 +9,11 @@ public class UserException extends RuntimeException {
         this.code = resultEnum.getCode();
     }
 
+    public UserException(int code, String message) {
+        super(message);
+        this.code = code;
+    }
+
     public void setCode(Integer code) {
         this.code = code;
     }

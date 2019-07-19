@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.util.UUID;
 
@@ -29,7 +30,7 @@ public class UserEndpointImpl {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
-    public ResponseEntity<User> register(@RequestBody @NotNull User user) {
+    public ResponseEntity<User> register(@RequestBody @Valid User user) {
         user.setId(UUID.randomUUID().toString());
         userManager.register(user);
 
@@ -43,7 +44,7 @@ public class UserEndpointImpl {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
-    public ResponseEntity<User> registerAsync(@RequestBody @NotNull User user) {
+    public ResponseEntity<User> registerAsync(@RequestBody @Valid User user) {
         user.setId(UUID.randomUUID().toString());
         userManager.register(user, false);
 
@@ -90,7 +91,8 @@ public class UserEndpointImpl {
             consumes = {MediaType.ALL_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
-    public ResponseEntity<User> read(@NotNull @PathVariable(value = "id") String id) {
+    public ResponseEntity<User> read(@NotNull(message = "Id must not be empty")
+                                     @PathVariable(value = "id") String id) {
 
         User user = userManager.read(id);
         if (user != null) {
@@ -107,7 +109,8 @@ public class UserEndpointImpl {
             consumes = {MediaType.ALL_VALUE},
             produces = {MediaType.APPLICATION_JSON_VALUE}
     )
-    public ResponseEntity<User> delete(@NotNull @PathVariable(value = "id") String id) {
+    public ResponseEntity<User> delete(@NotNull(message = "Id must not be empty")
+                                       @PathVariable(value = "id") String id) {
 
         User user = userManager.delete(id);
         if (user != null) {
