@@ -1,0 +1,52 @@
+version: "2"
+services:
+  user-service1:
+    image: gonglongmin/pccw-assessment:Rel.1.0.0
+    ports:
+      - 8080
+    depends_on:
+      - notification-service
+    networks:
+     - back-tier
+    volumes:
+      - ./logs/user-service1:/logs
+  user-service2:
+    image: gonglongmin/pccw-assessment:Rel.1.0.0
+    ports:
+      - 8080
+    depends_on:
+      - notification-service
+    networks:
+     - back-tier
+    volumes:
+      - ./logs/user-service2:/logs
+
+  proxy:
+    image: haproxy:2.0.2-alpine
+    networks:
+      - back-tier
+    links:
+      - user-service1
+      - user-service2
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - ./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+  notification-service:
+    image: gonglongmin/pccw-assessment-notification:Rel.1.0.0
+    ports:
+      - "8081:8081"
+    networks:
+      - back-tier
+    volumes:
+      - ./logs/notification-service:/logs
+      - ./mail:/received-emails
+  redis:
+    image: redis:5.0.5-alpine
+    networks:
+      - back-tier
+networks:
+  back-tier:
+    driver: bridge
