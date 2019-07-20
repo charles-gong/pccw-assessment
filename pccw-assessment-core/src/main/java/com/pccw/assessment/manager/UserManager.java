@@ -2,7 +2,7 @@ package com.pccw.assessment.manager;
 
 import com.pccw.assessment.database.FakeDatabase;
 import com.pccw.assessment.entity.User;
-
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -13,13 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -129,5 +128,14 @@ public class UserManager {
      */
     public User delete(String id) {
         return fakeDatabase.delete(id, true);
+    }
+
+    /**
+     * List users
+     *
+     * @return {@link User}
+     */
+    public List<User> list() {
+        return fakeDatabase.list();
     }
 }

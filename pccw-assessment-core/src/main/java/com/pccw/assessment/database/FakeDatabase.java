@@ -7,6 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 @Repository
 public class FakeDatabase {
 
@@ -21,11 +25,11 @@ public class FakeDatabase {
      * @return true|false
      */
     public User register(User user) {
-        boolean exist = redisTemplate.hasKey(user.getId());
-        if (exist) {
+        User exist = (User) redisTemplate.opsForHash().get("users", user.getId());
+        if (exist != null) {
             throw new UserException(ExceptionEnum.EXIST);
         } else {
-            redisTemplate.opsForValue().set(user.getId(), user);
+            redisTemplate.opsForHash().put("users", user.getId(), user);
             return user;
         }
     }
@@ -37,13 +41,11 @@ public class FakeDatabase {
      * @return true|false
      */
     public User edit(User user) {
-        boolean exist = redisTemplate.hasKey(user.getId());
-        if (exist) {
-            redisTemplate.opsForValue().set(user.getId(), user);
-            return user;
-        } else {
+        if (!checkExist(user.getId())) {
             throw new UserException(ExceptionEnum.NOT_FOUND);
         }
+        redisTemplate.opsForHash().put("users", user.getId(), user);
+        return user;
     }
 
     /**
@@ -53,13 +55,11 @@ public class FakeDatabase {
      * @return User info
      */
     public User read(String id) {
-        boolean exist = redisTemplate.hasKey(id);
-        if (exist) {
-            User user = (User) redisTemplate.opsForValue().get(id);
-            return user;
-        } else {
+        if (!checkExist(id)) {
             throw new UserException(ExceptionEnum.NOT_FOUND);
         }
+
+        return (User) redisTemplate.opsForHash().get("users", id);
     }
 
     /**
@@ -70,18 +70,50 @@ public class FakeDatabase {
      * @return User info
      */
     public User delete(String id, boolean isSoft) {
-        boolean exist = redisTemplate.hasKey(id);
-        if (!exist) {
+        if (!checkExist(id)) {
             throw new UserException(ExceptionEnum.NOT_FOUND);
         }
-        User user = (User) redisTemplate.opsForValue().get(id);
+        User user = (User) redisTemplate.opsForHash().get("users", id);
         if (isSoft) {
-            user.setIsDeleted(true);
-            redisTemplate.opsForValue().set(id, user);
+            user.setDeleted(true);
+            redisTemplate.opsForHash().put("users", user.getId(), user);
             return user;
         } else {
-            redisTemplate.delete(id);
+            redisTemplate.opsForHash().delete(user, user.getId());
             return user;
+        }
+    }
+
+    /**
+     * List users
+     *
+     * @return user list
+     */
+    public List<User> list() {
+        Map<String, User> map = redisTemplate.opsForHash().entries("users");
+        List<User> users = new ArrayList<>();
+        map.forEach((s, u) -> {
+            if (!u.isDeleted()) {
+                users.add(u);
+            }
+        });
+
+        return users;
+    }
+
+
+    /**
+     * Check if the user is deleted or not exist
+     *
+     * @param id user id
+     * @return true|false
+     */
+    private boolean checkExist(String id) {
+        User exist = (User) redisTemplate.opsForHash().get("users", id);
+        if (exist != null && !exist.isDeleted()) {
+            return true;
+        } else {
+            return false;
         }
     }
 }

@@ -8,8 +8,12 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
+import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -26,21 +30,17 @@ public class FakeDatabaseTest {
     private RedisTemplate redisTemplate;
 
     @Mock
-    private ValueOperations valueOperations;
+    private HashOperations hashOperations;
 
     @Before
     public void beforeTest() {
-        User user = new User();
-        user.setId("user");
-
-        when(redisTemplate.opsForValue()).thenReturn(valueOperations);
-        doNothing().when(valueOperations).set(anyString(), any(User.class));
-        when(valueOperations.get(anyString())).thenReturn(user);
+        when(redisTemplate.opsForHash()).thenReturn(hashOperations);
+        doNothing().when(hashOperations).put(anyString(), anyString(), any(User.class));
     }
 
     @Test
     public void register() {
-        when(redisTemplate.hasKey(anyString())).thenReturn(false);
+        when(hashOperations.get(anyString(), anyString())).thenReturn(null);
         User user = new User();
         user.setId("user");
         User rUser = fakeDatabase.register(user);
@@ -49,26 +49,40 @@ public class FakeDatabaseTest {
 
     @Test
     public void edit() {
-        when(redisTemplate.hasKey(anyString())).thenReturn(true);
         User user = new User();
         user.setId("user");
+        when(hashOperations.get(anyString(), anyString())).thenReturn(user);
         User rUser = fakeDatabase.edit(user);
         Assert.assertEquals(user.getId(), rUser.getId());
     }
 
     @Test
     public void read() {
-        when(redisTemplate.hasKey(anyString())).thenReturn(true);
+
         User user = new User();
         user.setId("user");
+        when(hashOperations.get(anyString(), anyString())).thenReturn(user);
         User rUser = fakeDatabase.read("user");
         Assert.assertEquals(user.getId(), rUser.getId());
     }
 
     @Test
     public void delete() {
-        when(redisTemplate.hasKey(anyString())).thenReturn(true);
+        User user = new User();
+        user.setId("user");
+        when(hashOperations.get(anyString(), anyString())).thenReturn(user);
         User rUser = fakeDatabase.delete("user", true);
         Assert.assertEquals("user", rUser.getId());
+    }
+
+    @Test
+    public void list() {
+        User user = new User();
+        user.setId("user");
+        Map<String, User> map = new HashMap<>();
+        map.put(user.getId(), user);
+        when(hashOperations.entries(anyString())).thenReturn(map);
+        List<User> users = fakeDatabase.list();
+        Assert.assertEquals(users.size(), 1);
     }
 }
