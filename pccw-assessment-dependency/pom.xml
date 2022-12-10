@@ -11,7 +11,7 @@
 
     <packaging>pom</packaging>
     <properties>
-        <spring.framework.version>5.1.7.RELEASE</spring.framework.version>
+        <spring.framework.version>6.0.0</spring.framework.version>
         <spring.boot.starter.parent.version>2.1.5.RELEASE</spring.boot.starter.parent.version>
         <lombok.version>1.18.8</lombok.version>
         <slf4j.version>1.7.26</slf4j.version>
